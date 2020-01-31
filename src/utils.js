@@ -52,3 +52,17 @@ export function isTouch() {
     return false;
   }
 }
+
+// ==============================
+// Video detection
+// ==============================
+
+export function isVideo(src) {
+    if (src) {
+        if (["mp4", "mov", "avi", "ogg", "3gp", "MOV", "3GP", "MP4"].includes(src.split(".").pop())) {
+            return true;
+        }
+    }
+
+    return false;
+}

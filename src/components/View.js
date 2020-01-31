@@ -3,9 +3,9 @@
 import React from 'react';
 import glam from 'glam';
 
-import { Div, Img } from '../primitives';
+import { Div, Img, Video } from '../primitives';
 import { type PropsWithStyles } from '../types';
-import { className } from '../utils';
+import { className, isVideo } from '../utils';
 import { getSource } from './component-helpers';
 
 type Props = PropsWithStyles & {
@@ -32,16 +32,32 @@ const View = (props: Props) => {
       css={getStyles('view', props)}
       className={className('view', { isFullscreen, isModal })}
     >
-      <Img
-        {...innerProps}
-        className={className('view-image', { isFullscreen, isModal })}
-        css={{
-          height: 'auto',
-          maxHeight: '100vh',
-          maxWidth: '100vw',
-          userSelect: 'none',
-        }}
-      />
+      {!isVideo(innerProps.src) ? (
+        <Img
+          {...innerProps}
+          className={className('view-image', { isFullscreen, isModal })}
+          css={{
+            height: 'auto',
+            maxHeight: '100vh',
+            maxWidth: '100vw',
+            userSelect: 'none',
+          }}
+        />
+      ) : (
+        <Video
+          {...innerProps}
+          className={className('view-image', { isFullscreen, isModal })}
+          css={{
+            height: 'auto',
+            width: '100%',
+            maxHeight: '100vh',
+            maxWidth: '100vw',
+            userSelect: 'none',
+          }}
+          controls
+        />
+      )}
+      
     </Div>
   );
 };

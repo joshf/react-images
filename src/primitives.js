@@ -27,3 +27,4 @@ export const Div = (props: {}) => <Base tag="div" {...props} />;
 export const Img = (props: {}) => <Base tag="img" {...props} />;
 export const Nav = (props: {}) => <Base tag="nav" {...props} />;
 export const Span = (props: {}) => <Base tag="span" {...props} />;
+export const Video = (props: {}) => <Base tag="video" {...props} />;
