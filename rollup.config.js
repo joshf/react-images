@@ -2,7 +2,7 @@
 
 import babel from 'rollup-plugin-babel';
 import resolve from 'rollup-plugin-node-resolve';
-import uglify from 'rollup-plugin-uglify';
+import { uglify } from 'rollup-plugin-uglify';
 import replace from 'rollup-plugin-replace';
 import { minify } from 'uglify-es';
 
@@ -17,16 +17,17 @@ const globals = {
   'raf-schd': 'rafScheduler',
   'react-view-pager': 'PageView',
   'react-full-screen': 'Fullscreen',
-  'react-scrolllock': 'ScrollLock',
   'a11y-focus-store': 'focusStore',
   'react-transition-group': 'Transition',
+  'react-focus-on': 'FocusOn',
   react: 'React',
+  'html-react-parser': 'ParseHtml',
 };
 import createEnv from 'dotenv';
 
 createEnv.config();
 const external = Object.keys(globals);
-const babelOptions = prod => {
+const babelOptions = (prod) => {
   let result = {
     babelrc: false,
     presets: [['env', { modules: false }], 'react'],

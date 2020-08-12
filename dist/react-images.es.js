@@ -1,10 +1,11 @@
-import React, { Children, Component, cloneElement } from 'react';
-import { createPortal, findDOMNode } from 'react-dom';
+import React, { cloneElement, Component, Children } from 'react';
+import { findDOMNode, createPortal } from 'react-dom';
 import glam from 'glam';
 import rafScheduler from 'raf-schd';
-import { Frame, Track, View, ViewPager } from 'react-view-pager';
+import { ViewPager, Frame, Track, View as View$1 } from 'react-view-pager';
+import ParseHtml from 'html-react-parser';
+import { FocusOn } from 'react-focus-on';
 import Fullscreen from 'react-full-screen';
-import ScrollLock from 'react-scrolllock';
 import focusStore from 'a11y-focus-store';
 import { Transition, TransitionGroup } from 'react-transition-group';
 
@@ -31,10 +32,6 @@ var createClass = function () {
     return Constructor;
   };
 }();
-
-
-
-
 
 var defineProperty = function (obj, key, value) {
   if (key in obj) {
@@ -65,8 +62,6 @@ var _extends = Object.assign || function (target) {
   return target;
 };
 
-
-
 var inherits = function (subClass, superClass) {
   if (typeof superClass !== "function" && superClass !== null) {
     throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
@@ -82,14 +77,6 @@ var inherits = function (subClass, superClass) {
   });
   if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
 };
-
-
-
-
-
-
-
-
 
 var objectWithoutProperties = function (obj, keys) {
   var target = {};
@@ -111,7 +98,6 @@ var possibleConstructorReturn = function (self, call) {
   return call && (typeof call === "object" || typeof call === "function") ? call : self;
 };
 
-// @jsx glam
 var Base = function Base(_ref) {
   var css = _ref.css,
       innerRef = _ref.innerRef,
@@ -124,8 +110,6 @@ var Base = function Base(_ref) {
     }, css)
   }, props));
 };
-
-
 var Button = function Button(props) {
   return glam(Base, _extends({ tag: 'button' }, props));
 };
@@ -144,12 +128,6 @@ var Span = function Span(props) {
 var Video = function Video(props) {
   return glam(Base, _extends({ tag: 'video' }, props));
 };
-
-// ==============================
-// NO OP
-// ==============================
-
-
 
 // ==============================
 // Class Name Prefixer
@@ -211,7 +189,6 @@ function isVideo(src) {
   return false;
 }
 
-// @jsx glam
 var containerCSS = function containerCSS(_ref) {
   var isFullscreen = _ref.isFullscreen;
   return {
@@ -241,7 +218,19 @@ var Container = function Container(props) {
 
 var smallDevice = '@media (max-width: 769px)';
 
-// @jsx glam
+/**
+ * Used to get the HTML class to select specific components.
+ * We call `className()` in utils with each of these to get the full className,
+ * with prefixes.
+ */
+var componentBaseClassNames = {
+  Header: 'header',
+  Footer: 'footer',
+  View: 'view',
+  Track: 'track',
+  Positioner: 'positioner'
+};
+
 var footerCSS = function footerCSS(_ref) {
   var isModal = _ref.isModal,
       interactionIsIdle = _ref.interactionIsIdle;
@@ -260,12 +249,18 @@ var footerCSS = function footerCSS(_ref) {
     right: isModal ? 0 : null,
     transform: isModal ? 'translateY(' + (interactionIsIdle ? 10 : 0) + 'px)' : null,
     transition: 'opacity 300ms, transform 300ms',
-    zIndex: isModal ? 1 : null
+    zIndex: isModal ? 1 : null,
+
+    '& *:focus': {
+      outline: '1.5px solid orange'
+    }
 
   }, smallDevice, {
     padding: isModal ? '20px 15px 15px' : '5px 0'
   });
 };
+
+var footerBaseClassName = componentBaseClassNames.Footer;
 
 var Footer = function Footer(props) {
   var components = props.components,
@@ -279,12 +274,12 @@ var Footer = function Footer(props) {
 
   var state = { isFullscreen: isFullscreen, isModal: isModal };
   var cn = {
-    container: className('footer', state),
+    container: className(footerBaseClassName, state),
     caption: className('footer__caption', state),
     count: className('footer__count', state)
   };
   var css = {
-    container: getStyles('footer', props),
+    container: getStyles(footerBaseClassName, props),
     caption: getStyles('footerCaption', props),
     count: getStyles('footerCount', props)
   };
@@ -329,7 +324,7 @@ var FooterCaption = function FooterCaption(props) {
       css: getStyles('footerCaption', props),
       className: className('footer__caption', state)
     },
-    caption
+    typeof caption === 'string' ? ParseHtml('<span>' + caption + '</span>') : caption
   );
 };
 
@@ -362,7 +357,6 @@ var FooterCount = function FooterCount(props) {
   );
 };
 
-// @jsx glam
 var Svg = function Svg(_ref) {
   var size = _ref.size,
       props = objectWithoutProperties(_ref, ['size']);
@@ -431,7 +425,6 @@ var FullscreenExit = function FullscreenExit(_ref6) {
   );
 };
 
-// @jsx glam
 var headerCSS = function headerCSS(_ref) {
   var interactionIsIdle = _ref.interactionIsIdle;
   return {
@@ -448,9 +441,14 @@ var headerCSS = function headerCSS(_ref) {
     top: 0,
     left: 0,
     right: 0,
-    zIndex: 1
+    zIndex: 1,
+    '& *:focus': {
+      outline: '1.5px solid orange'
+    }
   };
 };
+
+var headerBaseClassName = componentBaseClassNames.Header;
 
 var Header = function Header(props) {
   var components = props.components,
@@ -478,8 +476,8 @@ var Header = function Header(props) {
   return glam(
     Div,
     _extends({
-      css: getStyles('header', props),
-      className: className('header', state)
+      css: getStyles(headerBaseClassName, props),
+      className: className(headerBaseClassName, state)
       // TODO glam prefixer fails on gradients
       // https://github.com/threepointone/glam/issues/35
       , style: {
@@ -577,7 +575,6 @@ var HeaderClose = function HeaderClose(props) {
   );
 };
 
-// @jsx glam
 // ==============================
 // Navigation
 // ==============================
@@ -589,7 +586,10 @@ var navigationCSS = function navigationCSS(_ref) {
     alignItems: 'center',
     justifyContent: 'space-between',
     opacity: interactionIsIdle ? 0 : 1,
-    transition: 'opacity 300ms'
+    transition: 'opacity 300ms',
+    '& *:focus': {
+      outline: '1.5px solid orange'
+    }
   };
 };
 
@@ -680,7 +680,6 @@ var NavigationNext = function NavigationNext(props) {
   );
 };
 
-// @jsx glam
 // ==============================
 // Blanket
 // ==============================
@@ -736,8 +735,8 @@ var Positioner = function Positioner(props) {
   return glam(
     Div,
     _extends({
-      css: getStyles('positioner', props),
-      className: className('positioner', { isFullscreen: isFullscreen })
+      css: getStyles(componentBaseClassNames.Positioner, props),
+      className: className(componentBaseClassNames.Positioner, { isFullscreen: isFullscreen })
     }, innerProps),
     children
   );
@@ -757,15 +756,28 @@ var Dialog = function Dialog(props) {
   var children = props.children,
       getStyles = props.getStyles,
       innerProps = props.innerProps,
-      isFullscreen = props.isFullscreen;
+      isFullscreen = props.isFullscreen,
+      removeFocusOn = props.removeFocusOn;
 
-  return glam(
+
+  return removeFocusOn ? glam(
     Div,
     _extends({
       css: getStyles('dialog', props),
       className: className('dialog', { isFullscreen: isFullscreen })
     }, innerProps),
     children
+  ) : glam(
+    FocusOn,
+    null,
+    glam(
+      Div,
+      _extends({
+        css: getStyles('dialog', props),
+        className: className('dialog', { isFullscreen: isFullscreen })
+      }, innerProps),
+      children
+    )
   );
 };
 
@@ -780,7 +792,6 @@ function getSource(_ref) {
   return isFullscreen ? source.fullscreen : source.regular;
 }
 
-// @jsx glam
 var viewCSS = function viewCSS() {
   return {
     lineHeight: 0,
@@ -789,7 +800,9 @@ var viewCSS = function viewCSS() {
   };
 };
 
-var View$1 = function View$$1(props) {
+var viewBaseClassName = componentBaseClassNames.View;
+
+var View = function View(props) {
   var data = props.data,
       formatters = props.formatters,
       getStyles = props.getStyles,
@@ -805,8 +818,8 @@ var View$1 = function View$$1(props) {
   return glam(
     Div,
     {
-      css: getStyles('view', props),
-      className: className('view', { isFullscreen: isFullscreen, isModal: isModal })
+      css: getStyles(viewBaseClassName, props),
+      className: className(viewBaseClassName, { isFullscreen: isFullscreen, isModal: isModal })
     },
     !isVideo(innerProps.src) ? glam(Img, _extends({}, innerProps, {
       className: className('view-image', { isFullscreen: isFullscreen, isModal: isModal }),
@@ -841,7 +854,7 @@ var carouselComponents = {
   Navigation: Navigation,
   NavigationPrev: NavigationPrev,
   NavigationNext: NavigationNext,
-  View: View$1
+  View: View
 };
 
 var defaultCarouselComponents = function defaultCarouselComponents(providedComponents) {
@@ -862,8 +875,6 @@ var defaultModalComponents = function defaultModalComponents(providedComponents)
   return _extends({}, modalComponents, providedComponents);
 };
 
-// Carousel
-// Modal
 var defaultCarouselStyles = {
   container: containerCSS,
   footer: footerCSS,
@@ -882,9 +893,6 @@ var defaultModalStyles = {
   dialog: dialogCSS,
   positioner: positionerCSS
 };
-
-// Merge Utility
-// Allows consumers to extend a base Carousel or Modal with additional styles
 
 var easing = 'cubic-bezier(0.23, 1, 0.32, 1)'; // easeOutQuint
 var verticalOffset = 40;
@@ -936,7 +944,6 @@ var Fade = function Fade(_ref) {
     }
   );
 };
-
 var SlideUp = function SlideUp(_ref2) {
   var Tag = _ref2.component,
       onEntered = _ref2.onEntered,
@@ -991,14 +998,16 @@ var SlideUp = function SlideUp(_ref2) {
   );
 };
 
-// @jsx glam
-var defaultProps$1 = {
+var defaultProps = {
   allowFullscreen: !isTouch(),
   closeOnBackdropClick: true,
   closeOnEsc: true,
   preventScroll: true,
   styles: {}
 };
+
+/** Classes that when clicked on, close the backdrop */
+var backdropClassNames = new Set([componentBaseClassNames.View, componentBaseClassNames.Header, componentBaseClassNames.Footer, componentBaseClassNames.Track, componentBaseClassNames.Positioner].map(className));
 
 var Modal = function (_Component) {
   inherits(Modal, _Component);
@@ -1009,11 +1018,11 @@ var Modal = function (_Component) {
 
     var _this = possibleConstructorReturn(this, (Modal.__proto__ || Object.getPrototypeOf(Modal)).call(this, props));
 
-    _initialiseProps$1.call(_this);
+    _initialiseProps.call(_this);
 
     _this.cacheComponents(props.components);
 
-    _this.state = { isFullscreen: false };
+    _this.state = { isFullscreen: false, isClosing: false };
     return _this;
   }
 
@@ -1049,8 +1058,7 @@ var Modal = function (_Component) {
           Dialog = _components.Dialog;
       var _props = this.props,
           allowFullscreen = _props.allowFullscreen,
-          children = _props.children,
-          preventScroll = _props.preventScroll;
+          children = _props.children;
       var isFullscreen = this.state.isFullscreen;
 
       var commonProps = this.commonProps = this.getCommonProps();
@@ -1084,17 +1092,16 @@ var Modal = function (_Component) {
             component: Positioner,
             'in': transitionIn,
             innerProps: {
-              onClick: this.handleBackdropClick
+              onClick: this.state.isClosing ? null : this.handleBackdropClick
             },
             onEntered: this.modalDidMount,
             onExited: this.modalWillUnmount
           }),
           glam(
             Dialog,
-            commonProps,
+            _extends({ removeFocusOn: this.state.isClosing }, commonProps),
             carouselComponent
-          ),
-          preventScroll && glam(ScrollLock, null)
+          )
         )
       );
     }
@@ -1102,9 +1109,9 @@ var Modal = function (_Component) {
   return Modal;
 }(Component);
 
-Modal.defaultProps = defaultProps$1;
+Modal.defaultProps = defaultProps;
 
-var _initialiseProps$1 = function _initialiseProps() {
+var _initialiseProps = function _initialiseProps() {
   var _this2 = this;
 
   this.modalDidMount = function () {
@@ -1115,6 +1122,7 @@ var _initialiseProps$1 = function _initialiseProps() {
   this.modalWillUnmount = function () {
     document.removeEventListener('keyup', _this2.handleKeyUp);
     focusStore.restoreFocus();
+    _this2.setState({ isClosing: false });
   };
 
   this.cacheComponents = function (comps) {
@@ -1143,7 +1151,35 @@ var _initialiseProps$1 = function _initialiseProps() {
   };
 
   this.handleBackdropClick = function (event) {
-    if (!event.target.classList.contains(className('view')) || !_this2.props.closeOnBackdropClick) {
+    var hasBackdropClassName = false;
+    var _iteratorNormalCompletion = true;
+    var _didIteratorError = false;
+    var _iteratorError = undefined;
+
+    try {
+      for (var _iterator = event.target.classList[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+        var targetClass = _step.value;
+
+        if (backdropClassNames.has(targetClass)) {
+          hasBackdropClassName = true;
+        }
+      }
+    } catch (err) {
+      _didIteratorError = true;
+      _iteratorError = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion && _iterator.return) {
+          _iterator.return();
+        }
+      } finally {
+        if (_didIteratorError) {
+          throw _iteratorError;
+        }
+      }
+    }
+
+    if (!hasBackdropClassName || !_this2.props.closeOnBackdropClick) {
       return;
     }
 
@@ -1160,8 +1196,10 @@ var _initialiseProps$1 = function _initialiseProps() {
     var onClose = _this2.props.onClose;
     var isFullscreen = _this2.state.isFullscreen;
 
-    // force exit fullscreen mode on close
 
+    _this2.setState({ isClosing: true });
+
+    // force exit fullscreen mode on close
     if (isFullscreen) {
       _this2.toggleFullscreen();
     }
@@ -1239,7 +1277,21 @@ function getAltText(_ref4) {
   var data = _ref4.data,
       index = _ref4.index;
 
-  if (data.caption) return data.caption;
+  if (data.alt) {
+    if (typeof data.alt !== 'string') {
+      console.error('Image ' + (index + 1) + ' had a non-string alt property, which will probably render incorrectly.\nInstead of a plain string it was ', data.alt);
+    }
+
+    return data.alt;
+  }
+
+  if (data.caption) {
+    if (typeof data.caption !== 'string') {
+      console.warn('Image ' + (index + 1) + ' has a non-string caption, but no alt\xA0value provided. This will probably make the alt prop unintelligible for screen readers. Is this intentional?');
+    }
+
+    return data.caption;
+  }
 
   return 'Image ' + (index + 1);
 }
@@ -1258,11 +1310,13 @@ var formatters = {
   getFullscreenLabel: getFullscreenLabel
 };
 
-// @jsx glam
-var viewPagerStyles = { flex: '1 1 auto', position: 'relative' };
+var viewPagerStyles = {
+  flex: '1 1 auto',
+  position: 'relative'
+};
 var frameStyles = { outline: 0 };
 
-var defaultProps = {
+var defaultProps$1 = {
   currentIndex: 0,
   formatters: formatters,
   hideControlsWhenIdle: 3000,
@@ -1274,7 +1328,9 @@ var defaultProps = {
   }
 };
 
-var Carousel$1 = function (_Component) {
+var trackBaseClassName = componentBaseClassNames.Track;
+
+var Carousel = function (_Component) {
   inherits(Carousel, _Component);
 
   function Carousel(props) {
@@ -1282,7 +1338,7 @@ var Carousel$1 = function (_Component) {
 
     var _this = possibleConstructorReturn(this, (Carousel.__proto__ || Object.getPrototypeOf(Carousel)).call(this, props));
 
-    _initialiseProps.call(_this);
+    _initialiseProps$1.call(_this);
 
     _this.cacheComponents(props.components);
 
@@ -1322,7 +1378,7 @@ var Carousel$1 = function (_Component) {
       }
 
       if (this.props.currentIndex !== prevProps.currentIndex) {
-        this.setState({ currentIndex: prevProps.currentIndex });
+        this.setState({ currentIndex: this.props.currentIndex });
       }
     }
   }, {
@@ -1398,7 +1454,7 @@ var Carousel$1 = function (_Component) {
     value: function render() {
       var _components = this.components,
           Container = _components.Container,
-          View$$1 = _components.View;
+          View = _components.View;
       var currentIndex = this.state.currentIndex;
       var _props3 = this.props,
           frameProps = _props3.frameProps,
@@ -1422,22 +1478,23 @@ var Carousel$1 = function (_Component) {
             _extends({}, frameProps, {
               ref: this.getFrame,
               className: className('frame'),
-              style: frameStyles
+              style: frameStyles,
+              tabIndex: '-1'
             }),
             glam(
               Track,
               _extends({}, this.getTrackProps(this.props), {
                 style: { display: 'flex', alignItems: 'center' },
                 currentView: currentIndex,
-                className: className('track'),
+                className: className(trackBaseClassName),
                 onViewChange: this.handleViewChange,
                 ref: this.getTrack
               }),
               views && views.map(function (data, index) {
                 return glam(
-                  View,
+                  View$1,
                   { className: className('view-wrapper'), key: index },
-                  glam(View$$1, _extends({}, commonProps, { data: data, index: index }))
+                  glam(View, _extends({}, commonProps, { data: data, index: index }))
                 );
               })
             )
@@ -1451,9 +1508,9 @@ var Carousel$1 = function (_Component) {
   return Carousel;
 }(Component);
 
-Carousel$1.defaultProps = defaultProps;
+Carousel.defaultProps = defaultProps$1;
 
-var _initialiseProps = function _initialiseProps() {
+var _initialiseProps$1 = function _initialiseProps() {
   var _this2 = this;
 
   this.mounted = false;
@@ -1508,11 +1565,11 @@ var _initialiseProps = function _initialiseProps() {
   };
 
   this.getTrackProps = function (props) {
-    return _extends({}, defaultProps.trackProps, props.trackProps);
+    return _extends({}, defaultProps$1.trackProps, props.trackProps);
   };
 
   this.getFormatters = function () {
-    return _extends({}, defaultProps.formatters, _this2.props.formatters);
+    return _extends({}, defaultProps$1.formatters, _this2.props.formatters);
   };
 
   this.getViewData = function () {
@@ -1684,5 +1741,5 @@ ModalGateway.defaultProps = {
   target: typeof window !== 'undefined' ? document.body : null
 };
 
-export { ModalGateway, Modal, carouselComponents, modalComponents };
-export default Carousel$1;
+export default Carousel;
+export { Modal, ModalGateway, carouselComponents, modalComponents };
